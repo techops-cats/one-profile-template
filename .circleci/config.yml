@@ -1,0 +1,122 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:17.4.0
+    steps:
+      - checkout
+      - run:
+          name: install dependencies
+          command: yarn install
+      - run:
+          name: run tests
+          command: yarn test
+      - run:
+          name: build package
+          command: yarn build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+  security_checks:
+    docker:
+      - image: returntocorp/semgrep
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: "Semgrep Default Scan"
+          command: |
+            cd src
+            semgrep ci --config p/ci --config=p/security-audit --config=p/secrets --config=../custom-semgrep.yml --metrics=off
+  publish-npm:
+    docker:
+      - image: cimg/node:17.4.0
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Publish Packages
+          command: npm publish
+  release:
+    docker:
+      - image: cimg/node:17.4.0
+    parameters:
+      RELEASE_ENV:
+        type: string
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Release package
+          command: node release << parameters.RELEASE_ENV >>
+
+tag-filter: &tag-filter
+  filters:
+    tags:
+      only: /^v.*/
+release-tag-filter: &release-tag-filter
+  filters:
+    tags:
+      only: /^v.*/
+    branches:
+      ignore: /.*/
+
+workflows:
+  build-deploy:
+    jobs:
+      - build:
+          <<: *tag-filter
+          context:
+            - ORG-CONTEXT
+      - security_checks:
+          <<: *tag-filter
+          requires:
+            - build
+      - approve-publish-npm:
+          <<: *release-tag-filter
+          type: approval
+      - publish-npm:
+          <<: *release-tag-filter
+          context:
+            - ORG-CONTEXT
+          requires:
+            - security_checks
+            - approve-publish-npm
+      - approve-dev-release:
+          <<: *tag-filter
+          type: approval
+      - release:
+          <<: *tag-filter
+          name: release-dev
+          requires:
+            - approve-dev-release
+            - publish-npm
+          context:
+            - ORG-CONTEXT
+          RELEASE_ENV: dev
+      - approve-stage-release:
+          <<: *tag-filter
+          type: approval
+      - release:
+          <<: *tag-filter
+          name: release-stage
+          requires:
+            - approve-stage-release
+            - release-dev
+          context:
+            - ORG-CONTEXT
+          RELEASE_ENV: stage
+      - approve-prod-release:
+          <<: *tag-filter
+          type: approval
+      - release:
+          <<: *tag-filter
+          name: release-prod
+          requires:
+            - approve-prod-release
+            - release-stage
+          context:
+            - ORG-CONTEXT
+          RELEASE_ENV: prod

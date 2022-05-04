@@ -1,0 +1,7 @@
+rules:
+  - id: deny-process-env
+    patterns:
+      - pattern: process.env
+    message: Process environments can inject secrets into distribution
+    languages: [javascript, typescript]
+    severity: ERROR
