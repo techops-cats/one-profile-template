@@ -1,8 +1,16 @@
 # one-profile-template
 
-THIS IS A TEMPLATE REPOSITORY FOR ONE-PROFILE
+THIS IS A TEMPLATE REPOSITORY FOR ONE-PROFILE (NPM RELEASE CHANNEL)
 
-## Initial Setup
+## Possible release channels
+
+- NPM Package (current)
+- GCP CloudRun (need contribution)
+- AWS Cloudfront (need contribution)
+
+You can reach out to [TechOps CATS team](mailto:cats@thoughtworks.com)
+
+## Initial Setup (common for all release channels)
 
 ### 1. Project name
 
@@ -38,7 +46,7 @@ export IMD_USERNAME
 export IMD_PASSWORD
 ```
 
-## Releasing Package
+## Releasing Package (only for teams who choose npm as CDN)
 
 ### 1. Version
 
@@ -79,5 +87,5 @@ Run the following command. Once you unpublish you cannot republish using the sam
 Refer CircleCI for minimal setup. You can additionally add any workflow. The workflow contains immediate deployment strategy for import-maps includes
 
 ```diff
-- NOTE: ANY WORKFLOW THAT INVOLVED NPM PUBLISH SHOULD HAVE SEMGREP IN PLACE TO AVOID SECURITY INCIDENTS
+- NOTE: ANY WORKFLOW SHOULD HAVE SEMGREP IN PLACE TO AVOID SECURITY INCIDENTS
 ```

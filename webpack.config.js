@@ -18,5 +18,7 @@ module.exports = (webpackConfigEnv, argv) => {
   return merge(defaultConfig, {
     // modify the webpack config however you'd like to by adding to this object
     externals: ["@mui/material", "@emotion/styled", "@emotion/react"],
+    // These dependencies are what assumed to be common dependencies.
+    // You can propose to one profile team if you want to suggest a dependency that can be preloaded in one profile for performance improvement
   });
 };
